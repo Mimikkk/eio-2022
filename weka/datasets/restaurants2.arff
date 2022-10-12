@@ -1,0 +1,21 @@
+@relation restaurants
+
+@attribute cuisine {American,Polish,Italian}
+@attribute baverages {non-alco,alco,all,none}
+@attribute vege {no,yes}
+@attribute location {suburbs,city-centre,road}
+@attribute stars {one,two,three}
+
+@data
+Polish,non-alco,yes,city-centre,one
+American,all,yes,suburbs,one
+American,non-alco,no,road,one
+Polish,all,no,suburbs,one
+Italian,none,no,road,two
+Polish,all,yes,city-centre,two
+Polish,all,no,city-centre,two
+American,none,yes,road,three
+Italian,alco,yes,suburbs,three
+Polish,alco,yes,road,three
+Italian,alco,no,suburbs,three
+Polish,all,no,suburbs,two
