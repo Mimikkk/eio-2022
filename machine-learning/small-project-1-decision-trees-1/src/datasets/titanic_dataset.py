@@ -25,4 +25,3 @@ class Titanic(Dataset[Row]):
           'family': int(family),
           'survived': bool(int(survived)),
         } for (p_id, p_class, _, sex, age, siblings, family, survived) in lines)
-Titanic.fromfile()
