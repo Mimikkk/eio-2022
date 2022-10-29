@@ -1,3 +1,4 @@
+from functools import reduce
 from typing import TypedDict, Iterable, overload
 from typing import TypeVar
 from ..stats import maths
@@ -31,11 +32,11 @@ class Dataset(tuple[X, ...]):
   def information_gain_ratio(self, feature: str, decision: str, /, *, base: int = 2) -> float:
     return self.information_gain(feature, decision, base=base) / self.split_information(feature, base=base)
 
-  def counts(self, label: str, l_class: str):
-    return sum(1 for row in self if row[label] == l_class)
+  def counts(self, feature: str, f_class: str):
+    return sum(1 for row in self if row[feature] == f_class)
 
-  def classes(self, label: str):
-    return set(row[label] for row in self)
+  def classes(self, feature: str):
+    return set(row[feature] for row in self)
 
   def labels(self, _except: tuple[str]):
     return tuple(filter(lambda x: x not in _except, self[0]))
@@ -43,9 +44,15 @@ class Dataset(tuple[X, ...]):
   def __getitem__(self, value):
     if isinstance(value, str):
       return self.Series(row[value] for row in self)
-    if isinstance(value, tuple):
+    if isinstance(value, self.Series):
       it = iter(value)
       return type(self)(row for row in self if next(it))
+    if isinstance(value, tuple):
+      if isinstance(value[0], tuple):
+        return reduce(lambda acc, pair: acc[pair], value, self)
+      [first, rest] = value
+      return self[self[first] == rest]
+
     return super().__getitem__(value)
 
   def __str__(self):
@@ -56,3 +63,9 @@ class Dataset(tuple[X, ...]):
   class Series(tuple):
     def __eq__(self, key: str):
       return type(self)(key == x for x in self)
+
+    def __ne__(self, key: str):
+      return - (self == key)
+
+    def __neg__(self):
+      return type(self)(not x for x in self)
