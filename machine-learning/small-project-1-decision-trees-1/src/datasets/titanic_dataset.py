@@ -1,5 +1,5 @@
 import csv
-from .types import DatasetRow, Dataset
+from .dataset import DatasetRow, Dataset
 
 class Row(DatasetRow):
   p_id: int

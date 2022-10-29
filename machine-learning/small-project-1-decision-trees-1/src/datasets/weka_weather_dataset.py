@@ -1,6 +1,6 @@
 import csv
 
-from .types import Dataset, DatasetRow
+from .dataset import Dataset, DatasetRow
 
 class Row(DatasetRow):
   outlook: str

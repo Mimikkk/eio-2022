@@ -15,6 +15,16 @@ class Dataset(tuple[X, ...]):
       filter(lambda x: x != 0, (self.counts(label, c) for c in l_classes))
     ))
 
+  def information_gain(self, feature: str, decision: str):
+    total = len(self)
+
+    feature_info = sum(
+      (len(subset) / total) * subset.entropy(decision)
+      for subset in [self[self[feature] == value] for value in self.classes(feature)]
+    )
+
+    return self.entropy(decision) - feature_info
+
   def counts(self, label: str, l_class: str):
     return sum(1 for row in self if row[label] == l_class)
 
