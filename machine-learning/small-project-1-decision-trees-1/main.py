@@ -66,18 +66,30 @@ def verify(dataset: ds.Dataset, decision: str):
   print()
   treeify(create_tree(dataset, decision)).show()
 
+def predict(tree: dict, data: dict):
+  key: str
+  if isinstance(tree, bool):
+    return tree
+  for (key, value) in tree.items():
+    if isinstance(value, dict):
+      if key in data:
+        return predict(value[data[key]], data)
+      else:
+        return value
 offset = 24
 decision = 'survived'
 if __name__ == '__main__':
   verify(ds.WekaWeather.fromfile("resources/weka-weather.csv"), 'play')
 
-  dataset = ds.Titanic \
+  (train_set, test_set) = ds.Titanic \
     .fromfile("resources/titanic.csv") \
-    .omit(('p_id', 'name'), inline=True)
+    .omit(('p_id', 'name'), inline=True) \
+    .split(0.8)
 
-  age_mean = dataset[dataset[decision] == True]['age'].mean()
-  dataset['age'] = dataset['age'].map(lambda x: x <= age_mean and f'<={age_mean:.2f}' or f'>{age_mean:.2f}')
+  age_mean = train_set[train_set[decision] == True]['age'].mean()
+  train_set['age'] = train_set['age'].map(lambda x: x <= age_mean and f'<={age_mean:.2f}' or f'>{age_mean:.2f}')
+  print(train_set)
 
-  print(dataset)
-
-  treeify(create_tree(dataset, decision)).show()
+  treeify(tree := create_tree(train_set, decision)).show()
+  accuracy = sum(1 for row in test_set if predict(tree, row) == row[decision]) / len(test_set)
+  print(f"Accuracy: {accuracy:.2f}")

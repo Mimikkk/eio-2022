@@ -1,5 +1,6 @@
 from copy import deepcopy
 from functools import reduce
+from random import shuffle
 from typing import TypedDict
 from typing import TypeVar
 from ..stats import maths
@@ -62,6 +63,13 @@ class Dataset(tuple[X, ...]):
         } for row in self)
 
     return type(self)({other: row[other] for row in self})
+
+  def split(self, p: float):
+    if p < 0 or p > 1: raise ValueError("p must be between 0.0 and 1.0")
+
+    rows = deepcopy(self)[:]
+    n = int(p * len(self))
+    return type(self)(rows[:n]), type(self)(rows[n:])
 
   def __getitem__(self, value):
     if isinstance(value, str):
