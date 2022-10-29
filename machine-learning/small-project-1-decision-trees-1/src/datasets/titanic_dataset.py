@@ -2,7 +2,9 @@ import csv
 from .dataset import DatasetRow, Dataset
 
 class Row(DatasetRow):
+  p_id: int
   p_class: int
+  name: str
   sex: str
   age: int
   siblings: int
@@ -16,13 +18,15 @@ class Titanic(Dataset[Row]):
       next(lines := csv.reader(file, delimiter=","))
       return cls(
         {
+          "p_id": int(p_id),
           'p_class': int(p_class),
+          "name": name,
           'sex': sex,
           'age': cls._simplify_age(int(age)) if simplify else int(age),
           'siblings': int(siblings),
           'family': int(family),
           'survived': bool(int(survived)),
-        } for (p_id, p_class, _, sex, age, siblings, family, survived) in lines)
+        } for (p_id, p_class, name, sex, age, siblings, family, survived) in lines)
 
   @staticmethod
   def _simplify_age(age: int) -> str:

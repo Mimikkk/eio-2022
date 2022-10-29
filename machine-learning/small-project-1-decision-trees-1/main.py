@@ -7,14 +7,17 @@ def find_most_informative_feature(dataset, decision: str):
 
 def create_tree(dataset: ds.Dataset, decision: str):
   best_feature = find_most_informative_feature(dataset, decision)
-
+  print(best_feature)
   tree = {best_feature: {}}
-  for value in dataset.classes(best_feature):
-    subset = dataset[best_feature, value]
-    if len(subset.classes(decision)) == 1:
-      tree[best_feature][value] = subset[0][decision]
+  for f_class in dataset.classes(best_feature):
+    print(f_class)
+    subset = dataset[best_feature, f_class]
+    if len(subset) == 0:
+      tree[best_feature][f_class] = None
+    elif len(subset.classes(decision)) == 1:
+      tree[best_feature][f_class] = subset[0][decision]
     else:
-      tree[best_feature][value] = create_tree(subset, decision)
+      tree[best_feature][f_class] = create_tree(subset, decision)
 
   return tree
 
@@ -68,6 +71,10 @@ decision = 'survived'
 if __name__ == '__main__':
   verify(ds.WekaWeather.fromfile("resources/weka-weather.csv"), 'play')
 
-  dataset = ds.Titanic.fromfile("resources/titanic.csv", simplify=True)
-  tree = create_tree(dataset, decision)
-  tree = treeify(tree)
+  dataset = ds.Titanic.fromfile("resources/titanic.csv")
+  dataset.omit(('p_id', 'name'), inline=True)
+
+  mean = dataset[dataset[decision] == True]['age'].mean()
+  dataset['age'] = dataset['age'].map(lambda x: x <= mean and f'<={mean:.2f}' or f'>{mean:.2f}')
+
+  treeify(create_tree(dataset, decision)).show()
