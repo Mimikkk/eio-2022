@@ -11,19 +11,34 @@ class Dataset(tuple[X, ...]):
 
     total = len(self)
     return sum(map(
-      lambda x: maths.entropy(x / total, base=base),
-      filter(lambda x: x != 0, (self.counts(label, c) for c in l_classes))
+      lambda count: maths.entropy(count / total, base=base),
+      filter(lambda count: count != 0, (self.counts(label, c) for c in l_classes))
     ))
 
-  def information_gain(self, feature: str, decision: str):
+  def information(self, feature: str, decision: str):
     total = len(self)
 
-    feature_info = sum(
+    return sum(
       (len(subset) / total) * subset.entropy(decision)
-      for subset in [self[self[feature] == value] for value in self.classes(feature)]
+      for subset in (self[self[feature] == value] for value in self.classes(feature))
     )
 
-    return self.entropy(decision) - feature_info
+  def information_gain(self, feature: str, decision: str):
+    return self.entropy(decision) - self.information(feature, decision)
+
+  def split_information(self, feature: str):
+    total = len(self)
+
+    return sum(map(
+      lambda count: maths.entropy(count / total, base=2),
+      filter(lambda count: count != 0, (self.counts(feature, l_class) for l_class in self.classes(feature)))
+    ))
+
+  def information_gain_ratio(self, feature: str, decision: str):
+    return self.information_gain(feature, decision) / self.split_information(feature)
+
+  def find_most_informative_feature(self, decision: str):
+    return max(self.labels(decision), key=lambda x: self.information_gain(x, decision))
 
   def counts(self, label: str, l_class: str):
     return sum(1 for row in self if row[label] == l_class)
@@ -31,8 +46,8 @@ class Dataset(tuple[X, ...]):
   def classes(self, label: str):
     return set(row[label] for row in self)
 
-  def labels(self):
-    return tuple(self[0])
+  def labels(self, _except: tuple[str]):
+    return tuple(filter(lambda x: x not in _except, self[0]))
 
   def __getitem__(self, value):
     if isinstance(value, str):
@@ -44,7 +59,7 @@ class Dataset(tuple[X, ...]):
 
   def __str__(self):
     rows = '\n'.join(map(str, self))
-    headers = ", ".join(map(str, self.labels()))
+    headers = ", ".join(map(str, self.labels([])))
     return f"Labels:\n- {headers}\nData:\n{rows}"
 
   class Series(tuple):
