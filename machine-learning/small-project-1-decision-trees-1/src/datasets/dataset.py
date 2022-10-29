@@ -6,36 +6,30 @@ class DatasetRow(TypedDict): pass
 
 X = TypeVar("DatasetRow", bound=TypedDict)
 class Dataset(tuple[X, ...]):
-  def entropy(self, label: str, l_classes: Iterable[str] = None, /, *, base: int = 2) -> float:
-    if l_classes is None: l_classes = self.classes(label)
-
+  def entropy(self, feature: str, /, *, base: int = 2) -> float:
     total = len(self)
+
     return sum(map(
       lambda count: maths.entropy(count / total, base=base),
-      filter(lambda count: count != 0, (self.counts(label, c) for c in l_classes))
+      (self.counts(feature, c) for c in self.classes(feature))
     ))
 
-  def information(self, feature: str, decision: str):
+  def information(self, feature: str, decision: str, /, *, base: int = 2) -> float:
     total = len(self)
 
     return sum(
-      (len(subset) / total) * subset.entropy(decision)
+      (len(subset) / total) * subset.entropy(decision, base=base)
       for subset in (self[self[feature] == value] for value in self.classes(feature))
     )
 
-  def information_gain(self, feature: str, decision: str):
-    return self.entropy(decision) - self.information(feature, decision)
+  def information_gain(self, feature: str, decision: str, /, *, base: int = 2) -> float:
+    return self.entropy(decision, base=base) - self.information(feature, decision, base=base)
 
-  def split_information(self, feature: str):
-    total = len(self)
+  def split_information(self, feature: str, /, *, base: int = 2) -> float:
+    return self.entropy(feature, base=base)
 
-    return sum(map(
-      lambda count: maths.entropy(count / total, base=2),
-      filter(lambda count: count != 0, (self.counts(feature, l_class) for l_class in self.classes(feature)))
-    ))
-
-  def information_gain_ratio(self, feature: str, decision: str):
-    return self.information_gain(feature, decision) / self.split_information(feature)
+  def information_gain_ratio(self, feature: str, decision: str, /, *, base: int = 2) -> float:
+    return self.information_gain(feature, decision, base=base) / self.split_information(feature, base=base)
 
   def find_most_informative_feature(self, decision: str):
     return max(self.labels(decision), key=lambda x: self.information_gain(x, decision))
