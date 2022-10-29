@@ -1,3 +1,3 @@
-from .titanic_dataset import TitanicDataset
-from .weka_weather_dataset import WekaWeatherDataset
-from .types import Dataset
+from .titanic_dataset import Titanic
+from .weka_weather_dataset import WekaWeather
+from .types import Dataset, DatasetRow

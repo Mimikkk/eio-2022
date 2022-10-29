@@ -1,15 +1,16 @@
 import csv
-from .types import Dataset
 
-class WekaWeatherDatasetRow(Dataset):
+from .types import Dataset, DatasetRow
+
+class Row(DatasetRow):
   outlook: str
   temperature: str
   humidity: str
   windy: bool
   play: bool
-class WekaWeatherDataset(tuple[WekaWeatherDatasetRow, ...]):
+class WekaWeather(Dataset[Row]):
   @classmethod
-  def fromfile(cls, path: str) -> 'WekaWeatherDataset':
+  def fromfile(cls, path: str) -> 'WekaWeather':
     with open(path) as file:
       next(lines := csv.reader(file, delimiter=","))
       return cls(
