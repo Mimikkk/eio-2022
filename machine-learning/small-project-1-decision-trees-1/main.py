@@ -1,5 +1,7 @@
 from copy import deepcopy
 
+from treelib import Tree
+
 import src.datasets as ds
 
 def find_most_informative_feature(dataset, decision: str):
@@ -11,23 +13,39 @@ def create_tree(dataset: ds.Dataset, decision: str):
   best_feature = find_most_informative_feature(dataset, decision)
   print(f"Best feature: {best_feature}")
 
-  tree = {}
+  tree = {best_feature: {}}
   for value in dataset.classes(best_feature):
     subset = dataset[best_feature, value]
-    if len(subset) == 0:
-      tree[value] = None
-    elif len(subset.classes(decision)) == 1:
-      tree[value] = subset[0][decision]
+    if len(subset.classes(decision)) == 1:
+      tree[best_feature][value] = subset[0][decision]
     else:
-      tree[value] = create_tree(subset, decision)
+      tree[best_feature][value] = create_tree(subset, decision)
 
   return tree
 
-decision = 'play'
+def treeify(data: dict):
+  prefix = lambda a, b: f"{(a and f'{a},') or ''}{b}"
+  def visualizer(data: dict, p_id=""):
+    for (index, (key, value)) in enumerate(data.items()):
+      n_id = prefix(p_id, index)
+      if isinstance(value, dict):
+        yield p_id, n_id, f"{str(key).capitalize()}"
+        yield from visualizer(value, n_id)
+      else:
+        yield p_id, n_id, f"{str(key).capitalize()} -> {value}"
+
+  tree = Tree()
+  for (parent, node, value) in visualizer(data):
+    if not parent:
+      tree.create_node(value, node)
+    else:
+      tree.create_node(str(value), node, parent=parent)
+  return tree
+
 offset = 24
+decision = 'survived'
 if __name__ == '__main__':
-  dataset = ds.WekaWeather.fromfile("resources/weka-weather.csv")
-  print(dataset[('outlook', 'sunny'), ('temperature', 'hot'), ('humidity', 'high')])
+  dataset = ds.Titanic.fromfile("resources/titanic-dataset.csv", simplify=True)
   # entropy = dataset.entropy(decision)
   # print(dataset)
   # print()
@@ -52,4 +70,5 @@ if __name__ == '__main__':
   label = find_most_informative_feature(dataset, decision)
   print(f"Max information gain from: {label}")
   tree = create_tree(dataset, decision)
-  print(tree)
+  tree = treeify(tree)
+  tree.show()
