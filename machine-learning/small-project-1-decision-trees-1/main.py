@@ -1,5 +1,3 @@
-from copy import deepcopy
-
 from treelib import Tree
 
 import src.datasets as ds
@@ -8,10 +6,7 @@ def find_most_informative_feature(dataset, decision: str):
   return max(dataset.labels(decision), key=lambda x: dataset.information_gain(x, decision))
 
 def create_tree(dataset: ds.Dataset, decision: str):
-  dataset = deepcopy(dataset)
-
   best_feature = find_most_informative_feature(dataset, decision)
-  print(f"Best feature: {best_feature}")
 
   tree = {best_feature: {}}
   for value in dataset.classes(best_feature):
@@ -44,6 +39,9 @@ def treeify(data: dict):
 
 def verify(dataset: ds.Dataset, decision: str):
   entropy = dataset.entropy(decision)
+  print("Student: Daniel Zdancewicz")
+  print("Index: 145317")
+  print()
   print(dataset)
   print()
 
@@ -63,7 +61,7 @@ def verify(dataset: ds.Dataset, decision: str):
     print(f"{f'SI({label})': <{offset}}: {split_information:.4f}")
     print(f"{f'IGR({label})': <{offset}}: {information_gain_ratio:.4f}")
   print()
-
+  treeify(create_tree(dataset, decision)).show()
 
 offset = 24
 decision = 'survived'
