@@ -32,7 +32,7 @@ class Dataset(tuple[X, ...]):
     return self.information_gain(feature, decision, base=base) / self.split_information(feature, base=base)
 
   def find_most_informative_feature(self, decision: str):
-    return max(self.labels(decision), key=lambda x: self.information_gain(x, decision))
+    return max(self.labels(decision), key=lambda x: self.information_gain_ratio(x, decision))
 
   def counts(self, label: str, l_class: str):
     return sum(1 for row in self if row[label] == l_class)
