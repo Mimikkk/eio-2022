@@ -1,7 +1,7 @@
 import src.datasets as ds
 
 decision = 'play'
-offset = 32
+offset = 24
 if __name__ == '__main__':
   dataset = ds.WekaWeather.fromfile("resources/weka-weather.csv")
   entropy = dataset.entropy(decision)
@@ -25,5 +25,8 @@ if __name__ == '__main__':
     print(f"{f'IGR({label})': <{offset}}: {information_gain_ratio:.4f}")
   print()
 
-  label = dataset.find_most_informative_feature(decision)
+  def find_most_informative_feature(dataset, decision: str):
+    return max(dataset.labels(decision), key=lambda x: dataset.information_gain_ratio(x, decision))
+
+  label = find_most_informative_feature(dataset, decision)
   print(f"Max information gain from: {label}")
