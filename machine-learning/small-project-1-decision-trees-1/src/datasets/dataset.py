@@ -89,6 +89,25 @@ class Dataset(tuple[X, ...]):
       return self
     raise NotImplementedError
 
+  def prune_errors(self, decision: str):
+    invalid = set()
+    for i in range(len(self)):
+      for j in range(i + 1, len(self)):
+        same = all(self[i][key] == self[j][key] for key in self.labels([decision]))
+        if same and self[i][decision] == self[j][decision]: continue
+
+        invalid |= {i, j}
+
+    return type(self)(row for (i, row) in enumerate(self) if i not in invalid)
+
+  def __eq__(self, other):
+    if not isinstance(other, type(self)):
+      return False
+    if len(self) != len(other):
+      return False
+
+    return True
+
   class Series(tuple):
     def __eq__(self, key: str):
       return type(self)(key == x for x in self)
