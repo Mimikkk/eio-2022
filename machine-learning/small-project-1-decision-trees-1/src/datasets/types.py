@@ -1,4 +1,4 @@
-from typing import TypedDict, Iterable
+from typing import TypedDict, Iterable, overload
 from typing import TypeVar
 from ..stats import maths
 
@@ -20,3 +20,23 @@ class Dataset(tuple[X, ...]):
 
   def classes(self, label: str):
     return set(row[label] for row in self)
+
+  def labels(self):
+    return tuple(self[0])
+
+  def __getitem__(self, value):
+    if isinstance(value, str):
+      return self.Series(row[value] for row in self)
+    if isinstance(value, tuple):
+      it = iter(value)
+      return type(self)(row for row in self if next(it))
+    return super().__getitem__(value)
+
+  def __str__(self):
+    rows = '\n'.join(map(str, self))
+    headers = ", ".join(map(str, self.labels()))
+    return f"Labels:\n- {headers}\nData:\n{rows}"
+
+  class Series(tuple):
+    def __eq__(self, key: str):
+      return type(self)(key == x for x in self)
