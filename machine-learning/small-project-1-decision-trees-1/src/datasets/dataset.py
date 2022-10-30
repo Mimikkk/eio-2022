@@ -1,6 +1,6 @@
 from copy import deepcopy
 from functools import reduce
-from random import shuffle
+import random
 from typing import TypedDict
 from typing import TypeVar
 from ..stats import maths
@@ -68,6 +68,7 @@ class Dataset(tuple[X, ...]):
     if p < 0 or p > 1: raise ValueError("p must be between 0.0 and 1.0")
 
     rows = deepcopy(self)[:]
+    rows = random.sample(rows, len(rows))
     n = int(p * len(self))
     return type(self)(rows[:n]), type(self)(rows[n:])
 

@@ -66,16 +66,25 @@ def verify(dataset: ds.Dataset, decision: str):
   print()
   treeify(create_tree(dataset, decision)).show()
 
-def predict(tree: dict, data: dict):
+def predict(tree: dict, prediction: dict):
+  def is_numeric(subtree: dict):
+    return any(isinstance(key, str) and (key.startswith(">") or key.startswith("<=")) for key in subtree)
+  def handle_numeric(subree: dict, value: float):
+    first: str = tuple(subree.keys())[0]
+    comp = float(first.strip(">").strip("<="))
+    return subree.get(f">{comp}") or not subree.get(f"<={comp}") \
+      if value > comp else subree.get(f"<={comp}") or not subree.get(f">{comp}")
+
   key: str
-  if isinstance(tree, bool):
-    return tree
-  for (key, value) in tree.items():
-    if isinstance(value, dict):
-      if key in data:
-        return predict(value[data[key]], data)
-      else:
-        return value
+  if isinstance(tree, bool): return tree
+  for (key, value) in filter(lambda x: isinstance(x[1], dict), tree.items()):
+    if key in prediction:
+      if is_numeric(value):
+        return handle_numeric(value, prediction[key])
+      return predict(value[prediction[key]], prediction)
+    return value
+  return False
+
 offset = 24
 decision = 'survived'
 if __name__ == '__main__':
@@ -84,12 +93,13 @@ if __name__ == '__main__':
   (train_set, test_set) = ds.Titanic \
     .fromfile("resources/titanic.csv") \
     .omit(('p_id', 'name'), inline=True) \
-    .split(0.8)
+    .split(0.6)
 
-  age_mean = train_set[train_set[decision] == True]['age'].mean()
-  train_set['age'] = train_set['age'].map(lambda x: x <= age_mean and f'<={age_mean:.2f}' or f'>{age_mean:.2f}')
+  for numeric in ('age', 'family', 'siblings', 'p_class'):
+    mean = train_set[train_set[decision] == True][numeric].mean()
+    train_set[numeric] = train_set[numeric].map(lambda x: x <= mean and f'<={mean:.2f}' or f'>{mean:.2f}')
   print(train_set)
 
   treeify(tree := create_tree(train_set, decision)).show()
   accuracy = sum(1 for row in test_set if predict(tree, row) == row[decision]) / len(test_set)
-  print(f"Accuracy: {accuracy:.2f}")
+  print(f"Accuracy: {accuracy * 100:.2f}%")
