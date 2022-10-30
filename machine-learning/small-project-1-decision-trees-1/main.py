@@ -1,3 +1,5 @@
+import math
+
 from treelib import Tree
 
 import src.datasets as ds
@@ -96,7 +98,7 @@ if __name__ == '__main__':
     .split(0.6)
 
   for numeric in ('age', 'family', 'siblings', 'p_class'):
-    mean = train_set[train_set[decision] == True][numeric].mean()
+    mean = math.floor(train_set[train_set[decision] == True][numeric].mean())
     train_set[numeric] = train_set[numeric].map(lambda x: x <= mean and f'<={mean:.2f}' or f'>{mean:.2f}')
   print(train_set)
 
