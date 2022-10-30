@@ -15,9 +15,29 @@ def create_tree(dataset: ds.Dataset, decision: str):
     if subset == dataset: subset = subset.prune_errors(decision)
 
     if len(subset) == 0:
-      tree[best_feature][f_class] = False
+      val = False
+      if isinstance(f_class, str) and (f_class.startswith("<=") or f_class.startswith(">")):
+        _class = f_class.strip("<=").strip(">")
+        if f_class.startswith("<="):
+          tree[best_feature][f"<={_class}"] = val
+          tree[best_feature][f">{_class}"] = not val
+        else:
+          tree[best_feature][f"<={_class}"] = not val
+          tree[best_feature][f">{_class}"] = val
+      else:
+        tree[best_feature][f_class] = val
     elif len(subset.classes(decision)) == 1:
-      tree[best_feature][f_class] = subset[0][decision]
+      val = subset[0][decision]
+      if isinstance(f_class, str) and (f_class.startswith("<=") or f_class.startswith(">")):
+        _class = f_class.strip("<=").strip(">")
+        if f_class.startswith("<="):
+          tree[best_feature][f"<={_class}"] = val
+          tree[best_feature][f">{_class}"] = not val
+        else:
+          tree[best_feature][f"<={_class}"] = not val
+          tree[best_feature][f">{_class}"] = val
+      else:
+        tree[best_feature][f_class] = val
     else:
       tree[best_feature][f_class] = create_tree(subset, decision)
 
@@ -75,7 +95,8 @@ def predict(tree: dict, prediction: dict):
     first: str = tuple(subree.keys())[0]
     comp = float(first.strip(">").strip("<="))
     return subree.get(f">{comp}") or not subree.get(f"<={comp}") \
-      if value > comp else subree.get(f"<={comp}") or not subree.get(f">{comp}")
+      if value > comp \
+      else subree.get(f"<={comp}") or not subree.get(f">{comp}")
 
   key: str
   if isinstance(tree, bool): return tree
@@ -97,10 +118,9 @@ if __name__ == '__main__':
     .omit(('p_id', 'name'), inline=True) \
     .split(0.6)
 
-  for numeric in ('age', 'family', 'siblings', 'p_class'):
+  for numeric in ('age', 'family', 'siblings'):
     mean = math.floor(train_set[train_set[decision] == True][numeric].mean())
     train_set[numeric] = train_set[numeric].map(lambda x: x <= mean and f'<={mean:.2f}' or f'>{mean:.2f}')
-  print(train_set)
 
   treeify(tree := create_tree(train_set, decision)).show()
   accuracy = sum(1 for row in test_set if predict(tree, row) == row[decision]) / len(test_set)
