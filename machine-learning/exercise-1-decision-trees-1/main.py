@@ -120,7 +120,7 @@ if __name__ == '__main__':
 
   for numeric in ('age', 'family', 'siblings'):
     mean = math.floor(train_set[train_set[decision] == True][numeric].mean())
-    train_set[numeric] = train_set[numeric].map(lambda x: x <= mean and f'<={mean:.2f}' or f'>{mean:.2f}')
+    train_set[numeric] = train_set[numeric]._map(lambda x: x <= mean and f'<={mean:.2f}' or f'>{mean:.2f}')
 
   treeify(tree := create_tree(train_set, decision)).show()
   accuracy = sum(1 for row in test_set if predict(tree, row) == row[decision]) / len(test_set)
